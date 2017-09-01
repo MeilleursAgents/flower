@@ -347,6 +347,28 @@ var flower = (function () {
         });
     }
 
+    function on_task_replay(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var taskid = $('#taskid').text();
+
+        $.ajax({
+            type: 'POST',
+            url: url_prefix() + '/api/task/replay/' + taskid,
+            dataType: 'json',
+            data: {
+                'teminate': true,
+            },
+            success: function (data) {
+                show_success_alert(data.message);
+            },
+            error: function (data) {
+                show_error_alert(data.responseText);
+            }
+        });
+    }
+
     function sum(a, b) {
         return parseInt(a, 10) + parseInt(b, 10);
     }
@@ -860,6 +882,7 @@ var flower = (function () {
         on_cancel_task_filter: on_cancel_task_filter,
         on_task_revoke: on_task_revoke,
         on_task_terminate: on_task_terminate,
+        on_task_replay: on_task_replay,
     };
 
 }(jQuery));

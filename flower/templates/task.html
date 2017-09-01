@@ -17,6 +17,7 @@
             {% elif task.state == "RECEIVED" or task.state == "RETRY" %}
                 <button  style="float: right" class="btn btn-danger" onclick="flower.on_task_revoke(event)">Revoke</button>
             {% end %}
+                <button style="float: right" class="btn btn-info" onclick="flower.on_task_replay(event)">Replay</button>
           </h2>
         </div>
         <div class="row-fluid">

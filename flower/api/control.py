@@ -4,6 +4,8 @@ import time
 import logging
 import collections
 
+from celery import Celery
+from couchbase.bucket import Bucket
 from tornado import web
 from tornado import gen
 
@@ -11,6 +13,9 @@ from ..views import BaseHandler
 
 
 logger = logging.getLogger(__name__)
+
+
+BUCKET = 'listing_import_result_backend'
 
 
 class ControlHandler(BaseHandler):
@@ -586,3 +591,45 @@ Change rate limit for a task
             self.set_status(403)
             self.write("Failed to set rate limit: '%s'" %
                        self.error_reason(taskname, response))
+
+
+class TaskReplay(ControlHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bucket = Bucket('couchbase://localhost/{}'.format(BUCKET))
+
+        self.brokers = {}
+
+    @web.authenticated
+    def post(self, taskid):
+        """
+        """
+        logger.info("Replaying task '%s'", taskid)
+        terminate = self.get_argument('replay', default=False, type=bool)
+        # self.capp.control.revoke(taskid, terminate=terminate)
+        # Fetch task
+        task = self.bucket.get(taskid).value
+
+        # Find app in broker's list
+        task_broker = task['broker']
+        if task_broker not in self.brokers:
+            self.brokers[task_broker] = Celery(broker=task_broker)
+        app = self.brokers[task_broker]
+
+        # Send task with formatted args
+        new_task = app.send_task(
+            task['name'],
+            queue=task['routing_key'],
+            args=task['args'],
+            kwargs=task['kwargs']
+        )
+
+        if not task.get('replays'):
+            task['replays'] = []
+        task['replays'].append({
+            'send_task_time': time.time(),
+            'uuid': new_task.id
+        })
+        self.bucket.upsert(task['uuid'], task)
+
+        self.write(dict(message="Replayed '%s'" % taskid))
