@@ -596,7 +596,10 @@ Change rate limit for a task
 class TaskReplay(ControlHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.bucket = Bucket('couchbase://localhost/{}'.format(BUCKET))
+        self.bucket = Bucket('{}/{}'.format(
+            self.application.options.state_backend_server,
+            self.application.options.state_backend_bucket_name
+        ))
 
         self.brokers = {}
 
