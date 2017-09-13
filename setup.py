@@ -50,7 +50,7 @@ if sys.version_info < (3, 0):
 
 
 setup(
-    name='flower',
+    name='ma-flower',
     version=get_package_version(),
     description='Celery Flower',
     long_description=open('README.rst').read(),

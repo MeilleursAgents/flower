@@ -19,8 +19,6 @@ from ..utils.tasks import iter_tasks, get_task_by_id, as_dict
 
 logger = logging.getLogger(__name__)
 
-BUCKET = 'listing_import_result_backend'
-
 
 class WorkerWrapper:
     def __init__(self, hostname):
@@ -112,18 +110,18 @@ class TasksDataTable(BaseHandler):
         # XXX: implement full-text search
         # First count document
         q = N1QLQuery('select count(uuid) AS total_doc from `{bucket_name}`'.format(
-            bucket_name=BUCKET
+            bucket_name=self.application.options.state_backend_bucket_name
         ))
         total_doc_count = [r for r in self.bucket.n1ql_query(q)][0]['total_doc']
 
         filtered_tasks = []
         q = N1QLQuery('select * from `{bucket_name}` order by failed desc limit {limit} offset {offset}'.format(
-            bucket_name=BUCKET,
+            bucket_name=self.application.options.state_backend_bucket_name,
             limit=length,
             offset=start
         ))
         for row in self.bucket.n1ql_query(q):
-            task_dict = row[BUCKET]
+            task_dict = row[self.application.options.state_backend_bucket_name]
             task_dict['args'] = task_dict['args'].__repr__()
             task_dict['kwargs'] = task_dict['kwargs'].__repr__()
             task_dict['args'] = task_dict['args'][:25] + '...' if len(task_dict['args']) > 25 else task_dict['args']

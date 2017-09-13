@@ -15,8 +15,6 @@ from ..views import BaseHandler
 logger = logging.getLogger(__name__)
 
 
-BUCKET = 'listing_import_result_backend'
-
 
 class ControlHandler(BaseHandler):
     INSPECT_METHODS = ('stats', 'active_queues', 'registered', 'scheduled',
