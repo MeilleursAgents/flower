@@ -60,11 +60,15 @@ define("format_task", type=types.FunctionType, default=None,
 define("natural_time", type=bool, default=False,
        help="show time in relative format")
 define("tasks_columns", type=str,
-       default="name,uuid,state,args,kwargs,result,received,started,runtime,worker",
+       default="name,uuid,state,args,kwargs,result,started,failed,broker,worker",
        help="slugs of columns on /tasks/ page, delimited by comma")
 define("auth_provider", default='flower.views.auth.GoogleAuth2LoginHandler',
        help="auth handler class")
 define("url_prefix", type=str, help="base url prefix")
+define("state_backend_server", type=str, default="couchbase://localhost",
+       help="Couchbase dsn in which task states are stored" )
+define("state_backend_bucket_name", type=str, default="result_backend",
+       help="Couchbase bucket name in which task states are stored")
 
 # deprecated options
 define("inspect", default=False, help="inspect workers", type=bool)

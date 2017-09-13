@@ -347,6 +347,28 @@ var flower = (function () {
         });
     }
 
+    function on_task_replay(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var taskid = $('#taskid').text();
+
+        $.ajax({
+            type: 'POST',
+            url: url_prefix() + '/api/task/replay/' + taskid,
+            dataType: 'json',
+            data: {
+                'teminate': true,
+            },
+            success: function (data) {
+                show_success_alert(data.message);
+            },
+            error: function (data) {
+                show_error_alert(data.responseText);
+            }
+        });
+    }
+
     function sum(a, b) {
         return parseInt(a, 10) + parseInt(b, 10);
     }
@@ -779,8 +801,8 @@ var flower = (function () {
                 render: htmlEscapeEntities
             }, {
                 targets: 6,
-                data: 'received',
-                visible: isColumnVisible('received'),
+                data: 'started',
+                visible: isColumnVisible('started'),
                 render: function (data, type, full, meta) {
                     if (data) {
                         return format_time(data);
@@ -790,8 +812,8 @@ var flower = (function () {
 
             }, {
                 targets: 7,
-                data: 'started',
-                visible: isColumnVisible('started'),
+                data: 'failed',
+                visible: isColumnVisible('failed'),
                 render: function (data, type, full, meta) {
                     if (data) {
                         return format_time(data);
@@ -800,10 +822,10 @@ var flower = (function () {
                 }
             }, {
                 targets: 8,
-                data: 'runtime',
-                visible: isColumnVisible('runtime'),
+                data: 'broker',
+                visible: isColumnVisible('broker'),
                 render: function (data, type, full, meta) {
-                    return data ? data.toFixed(3) : data;
+                    return data;
                 }
             }, {
                 targets: 9,
@@ -860,6 +882,7 @@ var flower = (function () {
         on_cancel_task_filter: on_cancel_task_filter,
         on_task_revoke: on_task_revoke,
         on_task_terminate: on_task_terminate,
+        on_task_replay: on_task_replay,
     };
 
 }(jQuery));
