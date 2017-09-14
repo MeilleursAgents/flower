@@ -15,6 +15,7 @@ from .views.workers import WorkerView
 from .views.tasks import TaskView, TasksView, TasksDataTable
 from .views.error import NotFoundErrorHandler
 from .views.dashboard import DashboardView, DashboardUpdateHandler
+from .views.ping import PingView
 from .utils import gen_cookie_secret
 
 
@@ -29,6 +30,7 @@ settings = dict(
 
 handlers = [
     # App
+    url(r"/ping", PingView, name='ping'),
     url(r"/", DashboardView, name='main'),
     url(r"/dashboard", DashboardView, name='dashboard'),
     url(r"/worker/(.+)", WorkerView, name='worker'),
