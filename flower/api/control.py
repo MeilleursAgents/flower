@@ -6,6 +6,7 @@ import collections
 
 from celery import Celery
 from couchbase.bucket import Bucket
+from kombu import Connection
 from tornado import web
 from tornado import gen
 
@@ -614,15 +615,16 @@ class TaskReplay(ControlHandler):
         # Find app in broker's list
         task_broker = task['broker']
         if task_broker not in self.brokers:
-            self.brokers[task_broker] = Celery(broker=task_broker)
-        app = self.brokers[task_broker]
+            self.brokers[task_broker] = Connection(task_broker)
+        broker = self.brokers[task_broker]
 
         # Send task with formatted args
-        new_task = app.send_task(
+        new_task = Celery().send_task(
             task['name'],
             queue=task['routing_key'],
             args=task['args'],
-            kwargs=task['kwargs']
+            kwargs=task['kwargs'],
+            connection=broker
         )
 
         if not task.get('replays'):
@@ -633,4 +635,4 @@ class TaskReplay(ControlHandler):
         })
         self.bucket.upsert(task['uuid'], task)
 
-        self.write(dict(message="Replayed '%s'" % taskid))
+        self.write(dict(message="Replayed '{}' with id='{}'".format(taskid, new_task.id)))
