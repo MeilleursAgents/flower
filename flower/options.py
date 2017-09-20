@@ -69,6 +69,8 @@ define("state_backend_server", type=str, default="couchbase://localhost",
        help="Couchbase dsn in which task states are stored" )
 define("state_backend_bucket_name", type=str, default="result_backend",
        help="Couchbase bucket name in which task states are stored")
+define("state_backend_fts_name", type=str, default="tasks_fts",
+       help="Couchbase full text search name in which task states are stored")
 
 # deprecated options
 define("inspect", default=False, help="inspect workers", type=bool)
