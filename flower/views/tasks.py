@@ -9,6 +9,7 @@ try:
 except ImportError:
     imap = map
 
+import couchbase.fulltext as FT
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -106,31 +107,39 @@ class TasksDataTable(BaseHandler):
         def key(item):
             return Comparable(getattr(item[1], sort_by))
 
-        # Execute N1QL query and store in filtered_tasks
-        # XXX: implement full-text search
-        # First count document
-        q = N1QLQuery('select count(uuid) AS total_doc from `{bucket_name}`'.format(
-            bucket_name=self.application.options.state_backend_bucket_name
-        ))
-        total_doc_count = [r for r in self.bucket.n1ql_query(q)][0]['total_doc']
-
-        filtered_tasks = []
-        q = N1QLQuery('select * from `{bucket_name}` order by failed desc limit {limit} offset {offset}'.format(
-            bucket_name=self.application.options.state_backend_bucket_name,
-            limit=length,
-            offset=start
-        ))
-        for row in self.bucket.n1ql_query(q):
-            task_dict = row[self.application.options.state_backend_bucket_name]
+        def format_cb_task_dict(task_dict):
             task_dict['args'] = task_dict['args'].__repr__()
             task_dict['kwargs'] = task_dict['kwargs'].__repr__()
             task_dict['args'] = task_dict['args'][:25] + '...' if len(task_dict['args']) > 25 else task_dict['args']
             task_dict['kwargs'] = task_dict['kwargs'][:25] + '...' if len(task_dict['kwargs']) > 25 else task_dict['kwargs']
-            filtered_tasks.append(task_dict)
 
-        # recordsTotal = len(sorted_tasks)
+        q = N1QLQuery('select count(uuid) AS total_doc from `{bucket_name}`'.format(
+            bucket_name=self.application.options.state_backend_bucket_name
+        ))
+        total_doc_count = [r for r in self.bucket.n1ql_query(q)][0]['total_doc']
         recordsTotal = total_doc_count
-        recordsFiltered = total_doc_count
+
+        filtered_tasks = []
+        if search:
+            task_count = len([r['id'] for r in self.bucket.search(self.application.options.state_backend_fts_name, FT.TermQuery(search), limit=recordsTotal)])
+            task_ids = [r['id'] for r in self.bucket.search(self.application.options.state_backend_fts_name, FT.TermQuery(search), limit=length, skip=start)]
+            recordsFiltered = task_count
+            if task_ids:
+                for task_dict in self.bucket.get_multi(task_ids).values():
+                    task_dict = task_dict.value
+                    format_cb_task_dict(task_dict)
+                    filtered_tasks.append(task_dict)
+        else:
+            q = N1QLQuery('select * from `{bucket_name}` order by failed desc limit {limit} offset {offset}'.format(
+                bucket_name=self.application.options.state_backend_bucket_name,
+                limit=length,
+                offset=start
+            ))
+            for row in self.bucket.n1ql_query(q):
+                task_dict = row[self.application.options.state_backend_bucket_name]
+                format_cb_task_dict(task_dict)
+                filtered_tasks.append(task_dict)
+            recordsFiltered = total_doc_count
 
         self.write(dict(draw=draw, data=filtered_tasks,
                         recordsTotal=recordsTotal,
