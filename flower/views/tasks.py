@@ -113,7 +113,7 @@ class TasksDataTable(BaseHandler):
             task_dict['args'] = task_dict['args'][:25] + '...' if len(task_dict['args']) > 25 else task_dict['args']
             task_dict['kwargs'] = task_dict['kwargs'][:25] + '...' if len(task_dict['kwargs']) > 25 else task_dict['kwargs']
 
-        q = N1QLQuery('select count(uuid) AS total_doc from `{bucket_name}`'.format(
+        q = N1QLQuery('select count(*) AS total_doc from `{bucket_name}`'.format(
             bucket_name=self.application.options.state_backend_bucket_name
         ))
         total_doc_count = [r for r in self.bucket.n1ql_query(q)][0]['total_doc']
@@ -121,7 +121,7 @@ class TasksDataTable(BaseHandler):
 
         filtered_tasks = []
         if search:
-            task_count = len([r['id'] for r in self.bucket.search(self.application.options.state_backend_fts_name, FT.TermQuery(search), limit=recordsTotal)])
+            task_count = len([r['id'] for r in self.bucket.search(self.application.options.state_backend_fts_name, FT.TermQuery(search), limit=length)])
             task_ids = [r['id'] for r in self.bucket.search(self.application.options.state_backend_fts_name, FT.TermQuery(search), limit=length, skip=start)]
             recordsFiltered = task_count
             if task_ids:
