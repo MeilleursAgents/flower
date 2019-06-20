@@ -11,6 +11,7 @@ except ImportError:
 
 import couchbase.fulltext as FT
 from couchbase.bucket import Bucket
+from couchbase.cluster import Cluster, PasswordAuthenticator
 from couchbase.n1ql import N1QLQuery
 
 from tornado import web
@@ -47,10 +48,19 @@ class TaskWrapperFromCB:
 class TaskView(BaseHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.bucket = Bucket('{}/{}'.format(
-            self.application.options.state_backend_server,
-            self.application.options.state_backend_bucket_name
-        ))
+        if self.application.options.state_backend_user:
+            cluster = Cluster(self.application.options.state_backend_server)
+            authenticator = PasswordAuthenticator(
+                self.application.options.state_backend_user,
+                self.application.options.state_backend_password,
+            )
+            cluster.authenticate(authenticator)
+            self.bucket = cluster.open_bucket(self.application.options.state_backend_bucket_name)
+        else:
+            self.bucket = Bucket('{}/{}'.format(
+                self.application.options.state_backend_server,
+                self.application.options.state_backend_bucket_name
+            ))
 
     @web.authenticated
     def get(self, task_id):
@@ -87,10 +97,19 @@ class Comparable(object):
 class TasksDataTable(BaseHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.bucket = Bucket('{}/{}'.format(
-            self.application.options.state_backend_server,
-            self.application.options.state_backend_bucket_name
-        ))
+        if self.application.options.state_backend_user:
+            cluster = Cluster(self.application.options.state_backend_server)
+            authenticator = PasswordAuthenticator(
+                self.application.options.state_backend_user,
+                self.application.options.state_backend_password,
+            )
+            cluster.authenticate(authenticator)
+            self.bucket = cluster.open_bucket(self.application.options.state_backend_bucket_name)
+        else:
+            self.bucket = Bucket('{}/{}'.format(
+                self.application.options.state_backend_server,
+                self.application.options.state_backend_bucket_name
+            ))
 
     @web.authenticated
     def get(self):

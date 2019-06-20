@@ -67,6 +67,10 @@ define("auth_provider", default='flower.views.auth.GoogleAuth2LoginHandler',
 define("url_prefix", type=str, help="base url prefix")
 define("state_backend_server", type=str, default="couchbase://localhost",
        help="Couchbase dsn in which task states are stored" )
+define("state_backend_user", type=str, default=None,
+       help="Couchbase server user" )
+define("state_backend_password", type=str, default=None,
+       help="Couchbase server password" )
 define("state_backend_bucket_name", type=str, default="result_backend",
        help="Couchbase bucket name in which task states are stored")
 define("state_backend_fts_name", type=str, default="tasks_fts",
